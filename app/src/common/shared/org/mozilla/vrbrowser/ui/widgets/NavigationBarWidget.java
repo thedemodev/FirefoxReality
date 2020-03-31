@@ -64,6 +64,7 @@ import java.util.ArrayList;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static org.mozilla.vrbrowser.db.SitePermission.SITE_PERMISSION_DRM;
 import static org.mozilla.vrbrowser.db.SitePermission.SITE_PERMISSION_TRACKING;
 import static org.mozilla.vrbrowser.ui.widgets.menus.VideoProjectionMenuWidget.VIDEO_PROJECTION_NONE;
 
@@ -961,9 +962,16 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
 
     @Override
     public void onTrackingButtonClicked() {
-        toggleQuickPermission(mBinding.navigationBarNavigation.urlBar.getTrackingRButton(),
+        toggleQuickPermission(mBinding.navigationBarNavigation.urlBar.getTrackingButton(),
                 SitePermission.SITE_PERMISSION_TRACKING,
                 mViewModel.getIsTrackingEnabled().getValue().get());
+    }
+
+    @Override
+    public void onDrmButtonClicked() {
+        toggleQuickPermission(mBinding.navigationBarNavigation.urlBar.getTrackingButton(),
+                SitePermission.SITE_PERMISSION_DRM,
+                SettingsStore.getInstance(getContext()).isDrmContentPlaybackEnabled());
     }
 
     // VoiceSearch Delegate
@@ -978,6 +986,11 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
         if (key.equals(mAppContext.getString(R.string.settings_key_user_agent_version))) {
             if (mHamburgerMenu != null) {
                 mHamburgerMenu.setUAMode(SettingsStore.getInstance(getContext()).getUaMode());
+            }
+
+        } else if (key.equals(mAppContext.getString(R.string.settings_key_drm_playback))) {
+            if (mViewModel.getIsDrmUsed().getValue().get() && getSession() != null) {
+                getSession().reload(GeckoSession.LOAD_FLAGS_BYPASS_CACHE);
             }
         }
     }
@@ -1229,6 +1242,9 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
                         mTrackingDelegate.remove(getSession());
                     }
 
+                } else if (aCategory == SITE_PERMISSION_DRM) {
+                    SettingsStore.getInstance(getContext()).setDrmContentPlaybackEnabled(true);
+
                 } else {
                     SessionStore.get().setPermissionAllowed(uri, aCategory, false);
                 }
@@ -1241,6 +1257,9 @@ public class NavigationBarWidget extends UIWidget implements GeckoSession.Naviga
                     if (getSession() != null) {
                         mTrackingDelegate.add(getSession());
                     }
+
+                } else if (aCategory == SITE_PERMISSION_DRM) {
+                    SettingsStore.getInstance(getContext()).setDrmContentPlaybackEnabled(false);
 
                 } else {
                     SessionStore.get().setPermissionAllowed(uri, aCategory, true);
