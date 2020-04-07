@@ -49,8 +49,6 @@
                     android:id="@+id/drmContentPlaybackSwitch"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:on_text="@string/permission_allow"
-                    app:off_text="@string/permission_reject"
                     app:description="@string/security_options_drm_content_v1" />
 
                 <org.mozilla.vrbrowser.ui.views.settings.SwitchSetting
