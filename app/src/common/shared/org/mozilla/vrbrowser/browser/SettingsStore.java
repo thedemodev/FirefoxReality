@@ -221,6 +221,10 @@ public class SettingsStore {
                 mContext.getString(R.string.settings_key_drm_playback), DRM_PLAYBACK_DEFAULT);
     }
 
+    public boolean isDrmContentPlaybackSet() {
+        return mPrefs.contains(mContext.getString(R.string.settings_key_drm_playback));
+    }
+
     public void setDrmContentPlaybackEnabled(boolean isEnabled) {
         SharedPreferences.Editor editor = mPrefs.edit();
         editor.putBoolean(mContext.getString(R.string.settings_key_drm_playback), isEnabled);

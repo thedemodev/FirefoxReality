@@ -22,6 +22,7 @@ import org.mozilla.vrbrowser.ui.viewmodel.SitePermissionViewModel;
 import org.mozilla.vrbrowser.ui.widgets.WidgetManagerDelegate;
 import org.mozilla.vrbrowser.ui.widgets.WindowWidget;
 import org.mozilla.vrbrowser.ui.widgets.dialogs.PermissionWidget;
+import org.mozilla.vrbrowser.ui.widgets.dialogs.PromptDialogWidget;
 import org.mozilla.vrbrowser.utils.SystemUtils;
 import org.mozilla.vrbrowser.utils.UrlUtils;
 
@@ -178,10 +179,29 @@ public class PermissionDelegate implements GeckoSession.PermissionDelegate, Widg
         } else if (aType == PERMISSION_GEOLOCATION) {
             type = PermissionWidget.PermissionType.Location;
         } else if (aType == PERMISSION_MEDIA_KEY_SYSTEM_ACCESS) {
-            if (SettingsStore.getInstance(mContext).isDrmContentPlaybackEnabled()) {
-                callback.grant();
+            Runnable enableDrm = () -> {
+                if (SettingsStore.getInstance(mContext).isDrmContentPlaybackEnabled()) {
+                    callback.grant();
+                } else {
+                    callback.reject();
+                }
+            };
+            if (SettingsStore.getInstance(mContext).isDrmContentPlaybackSet()) {
+                enableDrm.run();
+
             } else {
-                callback.reject();
+                mWidgetManager.getFocusedWindow().showConfirmPrompt(
+                        mContext.getString(R.string.drm_first_use_title),
+                        mContext.getString(R.string.drm_first_use_body),
+                        new String[]{
+                                mContext.getString(R.string.drm_first_use_do_not_enable),
+                                mContext.getString(R.string.drm_first_use_enable),
+                        },
+                        index -> {
+                            SettingsStore.getInstance(mContext).setDrmContentPlaybackEnabled(index == PromptDialogWidget.POSITIVE);
+                            enableDrm.run();
+                        }
+                );
             }
             mWidgetManager.getFocusedWindow().setDrmUsed(true);
             return;
